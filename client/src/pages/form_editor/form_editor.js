@@ -94,24 +94,30 @@ const FormEditor = () => {
   return (
     <>
       <div>
-        <h2>{isEditing ? "Modifier le formulaire" : "Créer un formulaire"}</h2>
-        <button className="btn" onClick={handleGoHome}>
-          Retour à l'accueil
-        </button>
-        <br />
-        <label htmlFor="titre">Titre :</label>
-        <input
-          type="text"
-          id="titre"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <div style={{ marginTop: "20px", marginBottom: "20px" }}>
-          <button onClick={handleSaveForm} style={{ marginRight: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "30px", marginTop: "30px" }}>
+          <button className="btn" onClick={handleGoHome} style={{ marginLeft: "10px" }}>
+            Retour à l'accueil
+          </button>
+          <h2 style={{ margin: "0", textAlign: "center", flex: "1" }}>
+            {isEditing ? "Modifier le formulaire" : "Créer un formulaire"}
+          </h2>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "30px", width: "100%", padding: "0 10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: "1" }}>
+            <label htmlFor="titre" style={{ flex: "0 0 auto" }}>Titre :</label>
+            <input
+              type="text"
+              id="titre"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={{ flex: "1", padding: "8px" }}
+            />
+          </div>
+          <button onClick={handleSaveForm} style={{ marginLeft: "10px", padding: "8px 16px" }}>
             {isEditing ? "Mettre à jour" : "Enregistrer"}
           </button>
         </div>
-        <div ref={editorContainerRef} id="form-editor" style={{ width: "100%", height: "500px", border: "1px solid #ccc" }} />
+        <div ref={editorContainerRef} id="form-editor" style={{ width: "100%", height: "500px", border: "1px solid #ccc", marginTop: "20px", padding: "10px" }} />
       </div>
       <Modal
         isOpen={modal.isOpen}

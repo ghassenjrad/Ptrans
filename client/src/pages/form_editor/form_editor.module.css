@@ -1,0 +1,20 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.formRow {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.formRow label {
+  margin-right: 10px;
+}
+
+.formRow input {
+  flex: 1;
+  margin-right: 10px;
+}

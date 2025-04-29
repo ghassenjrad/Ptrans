@@ -114,11 +114,17 @@ const Accueil = () => {
     return (
         <>
             <div>
-                <h1>XP-LAB</h1>
-                <Link id={styles.createFormLink} to="/form-editor2">Créer un nouveau formulaire</Link>
+                <h1 style={{ textAlign: "center", marginBottom: "20px" }}>XP-LAB</h1>
+                <button
+                    className={styles.createFormButton}
+                    onClick={() => navigate("/form-editor2")}
+                >
+                    Créer un nouveau formulaire
+                </button>
 
                 {/* Champ pour entrer l'ID utilisateur par défaut */}
                 <div className={styles.defaultUserIdContainer}>
+                    <span className={styles.defaultUserIdLabel}>ID utilisateur par défaut :</span>
                     <input
                         type="text"
                         placeholder="ID Utilisateur par défaut"
@@ -126,7 +132,9 @@ const Accueil = () => {
                         onChange={handleDefaultUserIdChange}
                         className={styles.defaultUserIdInput}
                     />
-                    <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>Sauvegarder ID par défaut</button>
+                    <button onClick={handleSaveDefaultUserId} className={styles.saveButton}>
+                        Sauvegarder
+                    </button>
                 </div>
 
                 <h2>Liste des formulaires enregistrés</h2>
