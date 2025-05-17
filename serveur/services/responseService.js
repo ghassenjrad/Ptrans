@@ -5,6 +5,7 @@ const submitForm = (form_id, user_id, responses) => {
   return new Promise((resolve, reject) => {
     const ops = responses.map(({ component_id, value }) =>
       new Promise((res, rej) => {
+        const serializedValue = typeof value === "object" ? JSON.stringify(value) : value; // Serialize objects
         db.run(
           `
           INSERT INTO responses (form_id, component_id, user_id, value)
@@ -12,7 +13,7 @@ const submitForm = (form_id, user_id, responses) => {
           ON CONFLICT(form_id, component_id, user_id)
           DO UPDATE SET value = excluded.value, submitted_at = CURRENT_TIMESTAMP
           `,
-          [form_id, component_id, user_id, value],
+          [form_id, component_id, user_id, serializedValue],
           (err) => (err ? rej(err) : res())
         );
       })
@@ -24,16 +25,16 @@ const submitForm = (form_id, user_id, responses) => {
   });
 };
 
-
 const saveResponse = (form_id, user_id, component_id, value) => {
   return new Promise((resolve, reject) => {
+    const serializedValue = typeof value === "object" ? JSON.stringify(value) : value; // Serialize objects
     db.run(
       `
       INSERT INTO responses (form_id, component_id, user_id, value)
       VALUES (?, ?, ?, ?)
       ON CONFLICT(form_id, component_id, user_id) DO UPDATE SET value = excluded.value, submitted_at = CURRENT_TIMESTAMP
       `,
-      [form_id, component_id, user_id, value],
+      [form_id, component_id, user_id, serializedValue],
       function (err) {
         if (err) {
           reject(new Error("Erreur lors de l'insertion ou mise à jour de la réponse : " + err.message));
@@ -44,8 +45,6 @@ const saveResponse = (form_id, user_id, component_id, value) => {
     );
   });
 };
-
-
 
 const getResponses = (form_id) => {
   return new Promise((resolve, reject) => {
@@ -58,11 +57,14 @@ const getResponses = (form_id) => {
       [form_id],
       (err, rows) => {
         if (err) return reject(new Error("Erreur récupération réponses : " + err.message));
-        
+
         const grouped = {};
         rows.forEach(row => {
           if (!grouped[row.user_id]) grouped[row.user_id] = { user_id: row.user_id, responses: [] };
-          grouped[row.user_id].responses.push({ question: row.question, answer: row.answer });
+          grouped[row.user_id].responses.push({
+            question: row.question,
+            answer: tryParseJSON(row.answer) // Parse serialized JSON back into an object
+          });
         });
 
         resolve(Object.values(grouped));
@@ -71,6 +73,17 @@ const getResponses = (form_id) => {
   });
 };
 
+const tryParseJSON = (value) => {
+  try {
+    const parsed = JSON.parse(value); // Attempt to parse JSON
+    if (Array.isArray(parsed)) {
+      return `[${parsed.join(", ")}]`; // Join array elements with a comma and wrap in brackets
+    }
+    return parsed; // Return the parsed object if not an array
+  } catch {
+    return value; // Return the original value if parsing fails
+  }
+};
 
 const getParticipantResponses = (form_id, user_id) => {
   return new Promise((resolve, reject) => {
@@ -89,7 +102,6 @@ const getParticipantResponses = (form_id, user_id) => {
 };
 
 const shutdownServer = (req, res) => {
-  // Using exec to run the shutdown command
   exec('taskkill /FI "WINDOWTITLE eq React App*" /F', (err, stdout, stderr) => {
     if (err) {
       console.error('Shutdown failed:', stderr);

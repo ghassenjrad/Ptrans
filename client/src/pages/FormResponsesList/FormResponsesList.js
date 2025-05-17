@@ -39,17 +39,18 @@ const FormResponsesList = () => {
         if (!response.ok) throw new Error("Erreur lors du chargement des réponses");
 
         const data = await response.json();
-        const extractedQuestions = [];
 
-        data.forEach((userResponse) => {
-          userResponse.responses.forEach((resp) => {
-            if (!extractedQuestions.includes(resp.question)) {
-              extractedQuestions.push(resp.question);
-            }
-          });
-        });
+        // Fetch the form schema to get the correct order of questions
+        const formResponse = await fetch(`/api/forms/${id}`);
+        if (!formResponse.ok) throw new Error("Erreur lors du chargement du formulaire");
+        const formData = await formResponse.json();
 
-        setQuestions(extractedQuestions);
+        // Extract questions in the correct order, excluding buttons, separators, and spacers
+        const orderedQuestions = formData.json_data.components
+          .filter((component) => component.type !== "separator" && component.type !== "button" && component.type !== "spacer")
+          .map((component) => component.label);
+
+        setQuestions(orderedQuestions);
         setResponses(data);
       } catch (error) {
         console.error("Erreur lors du chargement des réponses :", error);
@@ -65,7 +66,9 @@ const FormResponsesList = () => {
       const row = [userResponse.user_id];
       questions.forEach((question) => {
         const answerObj = userResponse.responses.find((resp) => resp.question === question);
-        row.push(answerObj ? answerObj.answer || "N/A" : "N/A");
+        // Handle 0 explicitly, otherwise fallback to "N/A"
+        const answer = answerObj ? (answerObj.answer === 0 ? "0" : answerObj.answer || "N/A") : "N/A";
+        row.push(answer);
       });
       return row;
     });
@@ -110,6 +113,18 @@ const FormResponsesList = () => {
     );
   };
 
+  const formatAnswer = (answer) => {
+    try {
+      const parsed = JSON.parse(answer); // Attempt to parse JSON
+      if (Array.isArray(parsed)) {
+        return `[${parsed.join(", ")}]`; // Join array elements with a comma and wrap in brackets
+      }
+      return parsed; // Return the parsed object if not an array
+    } catch {
+      return answer || "N/A"; // Return the original value if parsing fails
+    }
+  };
+
   return (
     <div className={styles.container}>
       <h2>Réponses du formulaire</h2>
@@ -133,7 +148,8 @@ const FormResponsesList = () => {
                 <td>{userResponse.user_id}</td>
                 {questions.map((question, qIndex) => {
                   const answerObj = userResponse.responses.find((resp) => resp.question === question);
-                  return <td key={qIndex}>{answerObj ? answerObj.answer || "N/A" : "N/A"}</td>;
+                  const formattedAnswer = answerObj ? formatAnswer(answerObj.answer) : "N/A";
+                  return <td key={qIndex}>{formattedAnswer}</td>;
                 })}
               </tr>
             ))}
